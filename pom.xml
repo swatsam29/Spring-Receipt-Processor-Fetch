@@ -57,6 +57,7 @@
 				</configuration>
 			</plugin>
 		</plugins>
+		<finalName>springreceiptprocessor</finalName>
 	</build>
 
 </project>
