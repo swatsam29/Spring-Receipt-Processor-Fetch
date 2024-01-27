@@ -14,4 +14,5 @@ API calls:
 To test the microservice, use the following path:
 
 Post Method: "/receipts/generate-id"
+
 Get Method: "/receipts/{id}/points"
