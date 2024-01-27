@@ -10,6 +10,5 @@ public  class GenerateIdResponse {
         this.id = id;
     }
 
-    
 }
 

@@ -19,8 +19,7 @@ public class PointsCalculator {
         int totalPoints = 0;
         List<String> breakdownDetails = new ArrayList<>();
 
-        // Debugging: Log Retailer and Total
-
+      
         logger.info("Retailer: {}", receipt.getRetailer());
         logger.info("Total: {}", receipt.getTotal());
 
@@ -29,32 +28,25 @@ public class PointsCalculator {
         totalPoints += calculateAlphanumericPoints(receipt.getRetailer());
         breakdownDetails.add(String.format("%d points - retailer name has %d characters", totalPoints, receipt.getRetailer().length()));
 
-        // Rule 2: 50 points if the total is a round dollar amount with no cents
         if (isRoundDollarAmount(receipt.getTotal())) {
             totalPoints += 50;
             breakdownDetails.add("50 points - total is a round dollar amount with no cents");
         }
 
-        // Rule 3: 25 points if the total is a multiple of 0.25
         if (isMultipleOfQuarter(receipt.getTotal())) {
             totalPoints += 25;
             breakdownDetails.add("25 points - total is a multiple of 0.25");
         }
 
-        // Rule 4: 5 points for every two items on the receipt
         int itemPoints = calculateItemPoints(receipt.getItems().size());
         totalPoints += itemPoints;
         breakdownDetails.add(String.format("%d points - %d items (%d pairs @ 5 points each)", itemPoints, receipt.getItems().size(), itemPoints / 5));
 
-        // Rule 5: If the trimmed length of the item description is a multiple of 3,
-        // multiply the price by 0.2 and round up to the nearest integer.
-        // The result is the number of points earned.
         for (ReceiptsData.Item item : receipt.getItems()) {
             BigDecimal itemPrice = item.getPrice();
             int descriptionPoints = calculateDescriptionPoints(item.getShortDescription(), itemPrice);
             totalPoints += descriptionPoints;
         
-            // Calculate rounded points using setScale with RoundingMode.UP
             int roundedPoints = itemPrice.multiply(BigDecimal.valueOf(0.2))
                               .setScale(0, RoundingMode.UP)
                               .intValue();
@@ -67,13 +59,11 @@ public class PointsCalculator {
             breakdownDetails.add(breakdownDetail);
         }
 
-        // Rule 6: 6 points if the day in the purchase date is odd
         if (isDayOdd(receipt.getPurchaseDateTime())) {
             totalPoints += 6;
             breakdownDetails.add("6 points - purchase day is odd");
         }
 
-        // Rule 7: 10 points if the time of purchase is after 2:00 pm and before 4:00 pm
         if (isAfter2PMAndBefore4PM(receipt.getPurchaseDateTime())) {
             totalPoints += 10;
             breakdownDetails.add("10 points - time of purchase is after 2:00 pm and before 4:00 pm");

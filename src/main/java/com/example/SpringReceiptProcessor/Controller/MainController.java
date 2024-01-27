@@ -39,12 +39,10 @@ public class MainController {
             try {
                 return PointsCalculator.calculatePoints(receipt);
             } catch (Exception e) {
-                // Log the exception and return an appropriate response
                 e.printStackTrace();
                 return new PointsBreakdown(0, List.of("Error calculating points"));
             }
         } else {
-            // Handle case where receipt is not found
             return new PointsBreakdown(0, List.of());
         }
     }
