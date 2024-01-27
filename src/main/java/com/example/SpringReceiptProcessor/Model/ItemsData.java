@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 
 public class ItemsData {
      String shortDescription;
-    BigDecimal price;
+     BigDecimal price;
 
     public String toString() {
         return "ReceiptItem [shortDescription=" + shortDescription + ", price=" + price + "]";

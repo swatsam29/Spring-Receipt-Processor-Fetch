@@ -63,7 +63,7 @@ public class ReceiptsData {
 
     public static class Item {
         private String shortDescription;
-        private BigDecimal price;
+        private BigDecimal price;  // Change the type to BigDecimal
 
         public String getShortDescription() {
             return shortDescription;
@@ -72,6 +72,7 @@ public class ReceiptsData {
         public BigDecimal getPrice() {
             return price;
         }
+    
 
         public void setShortDescription(String shortDescription) {
             this.shortDescription = shortDescription;

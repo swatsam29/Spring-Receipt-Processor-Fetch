@@ -8,11 +8,23 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class PointsCalculator {
+
+    static Logger logger = LoggerFactory.getLogger(MainController.class);
 
     public static PointsBreakdown calculatePoints(ReceiptsData receipt) {
         int totalPoints = 0;
         List<String> breakdownDetails = new ArrayList<>();
+
+        // Debugging: Log Retailer and Total
+
+        logger.info("Retailer: {}", receipt.getRetailer());
+        logger.info("Total: {}", receipt.getTotal());
+
+
 
         totalPoints += calculateAlphanumericPoints(receipt.getRetailer());
         breakdownDetails.add(String.format("%d points - retailer name has %d characters", totalPoints, receipt.getRetailer().length()));
@@ -54,9 +66,7 @@ public class PointsCalculator {
         
             breakdownDetails.add(breakdownDetail);
         }
-        
-        
-    
+
         // Rule 6: 6 points if the day in the purchase date is odd
         if (isDayOdd(receipt.getPurchaseDateTime())) {
             totalPoints += 6;
@@ -114,7 +124,4 @@ public class PointsCalculator {
             return false;
         }
     }
-
-     
-
 }
