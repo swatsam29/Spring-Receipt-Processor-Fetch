@@ -3,8 +3,9 @@ package com.example.SpringReceiptProcessor.Controller;
 import com.example.SpringReceiptProcessor.Model.ReceiptsData;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,14 +20,9 @@ public class PointsCalculator {
         int totalPoints = 0;
         List<String> breakdownDetails = new ArrayList<>();
 
-      
-        logger.info("Retailer: {}", receipt.getRetailer());
-        logger.info("Total: {}", receipt.getTotal());
-
-
-
         totalPoints += calculateAlphanumericPoints(receipt.getRetailer());
-        breakdownDetails.add(String.format("%d points - retailer name has %d characters", totalPoints, receipt.getRetailer().length()));
+        breakdownDetails.add(String.format("%d points - retailer name has %d alphanumeric characters",
+                totalPoints, calculateAlphanumericPoints(receipt.getRetailer())));
 
         if (isRoundDollarAmount(receipt.getTotal())) {
             totalPoints += 50;
@@ -40,34 +36,44 @@ public class PointsCalculator {
 
         int itemPoints = calculateItemPoints(receipt.getItems().size());
         totalPoints += itemPoints;
-        breakdownDetails.add(String.format("%d points - %d items (%d pairs @ 5 points each)", itemPoints, receipt.getItems().size(), itemPoints / 5));
+        breakdownDetails.add(String.format("%d points - %d items (%d pairs @ 5 points each)", itemPoints,
+                receipt.getItems().size(), itemPoints / 5));
 
         for (ReceiptsData.Item item : receipt.getItems()) {
             BigDecimal itemPrice = item.getPrice();
             int descriptionPoints = calculateDescriptionPoints(item.getShortDescription(), itemPrice);
             totalPoints += descriptionPoints;
-        
-            int roundedPoints = itemPrice.multiply(BigDecimal.valueOf(0.2))
-                              .setScale(0, RoundingMode.UP)
-                              .intValue();
-        
-            String breakdownDetail = String.format("%d Points - \"%s\" is %d characters (a multiple of 3)\n" +
-                    "   item price of %s * 0.2 = %.2f, rounded up is %d points",
+
+            String breakdownDetail = String.format("%d Points - \"%s\" is %d characters (a multiple of 3) " +
+                            "item price of %.2f * 0.2 = %.2f, rounded up is %d points",
                     descriptionPoints, item.getShortDescription(), item.getShortDescription().trim().length(),
-                    itemPrice, itemPrice.multiply(BigDecimal.valueOf(0.2)).doubleValue(), roundedPoints);
-        
+                    itemPrice, itemPrice.multiply(BigDecimal.valueOf(0.2)).doubleValue(), descriptionPoints);
+
             breakdownDetails.add(breakdownDetail);
         }
 
-        if (isDayOdd(receipt.getPurchaseDateTime())) {
-            totalPoints += 6;
-            breakdownDetails.add("6 points - purchase day is odd");
+        // Purchase date and time points
+        if (receipt.getPurchaseDateTime() != null) {
+            logger.info("PurchaseDateTime: {}", receipt.getPurchaseDateTime());
+
+            if (isValidPurchaseDateTime(receipt.getPurchaseDateTime())) {
+                // Add points for odd day
+                totalPoints += 6;
+                breakdownDetails.add("6 points - purchase day is odd");
+
+                // Add points for business hours
+                totalPoints += 10;
+                breakdownDetails.add("10 points - time of purchase is after 2:00 pm and before 4:00 pm");
+            } else {
+                logger.error("Invalid PurchaseDateTime. Check data initialization.");
+            }
+        } else {
+            logger.error("PurchaseDateTime is null");
         }
 
-        if (isAfter2PMAndBefore4PM(receipt.getPurchaseDateTime())) {
-            totalPoints += 10;
-            breakdownDetails.add("10 points - time of purchase is after 2:00 pm and before 4:00 pm");
-        }
+        // Add the total line
+        breakdownDetails.add(" + ---------");
+        breakdownDetails.add(String.format(" = %d points", totalPoints));
 
         return new PointsBreakdown(totalPoints, breakdownDetails);
     }
@@ -97,21 +103,34 @@ public class PointsCalculator {
         return 0;
     }
 
-    private static boolean isDayOdd(LocalDateTime localDateTime) {
+    private static boolean isValidPurchaseDateTime(LocalDateTime purchaseDateTime) {
         try {
-            int day = localDateTime.getDayOfMonth();
-            return day % 2 != 0;
+            boolean isDayOdd = isDayOdd(purchaseDateTime);
+            boolean isBusinessHours = isBusinessHours(purchaseDateTime);
+
+            logger.info("Day is odd: {}", isDayOdd);
+            logger.info("Is business hours: {}", isBusinessHours);
+
+            // Validate date and business hours
+            return isDayOdd && isBusinessHours;
         } catch (Exception e) {
+            logger.error("Error validating purchase date/time: {}", e.getMessage());
             return false;
         }
     }
 
-    private static boolean isAfter2PMAndBefore4PM(LocalDateTime localDateTime) {
-        try {
-            int hour = localDateTime.getHour();
-            return hour > 14 && hour < 16;
-        } catch (Exception e) {
-            return false;
-        }
+    private static boolean isDayOdd(LocalDateTime localDateTime) {
+        int day = localDateTime.getDayOfMonth();
+        return day % 2 != 0;
+    }
+
+    private static boolean isBusinessHours(LocalDateTime localDateTime) {
+        DayOfWeek dayOfWeek = localDateTime.getDayOfWeek();
+        LocalTime startTime = LocalTime.of(14, 0); // 2:00pm
+        LocalTime endTime = LocalTime.of(16, 0);   // 4:00pm
+
+        // Consider only weekdays for business hours
+        return dayOfWeek != DayOfWeek.SATURDAY && dayOfWeek != DayOfWeek.SUNDAY &&
+                localDateTime.toLocalTime().isAfter(startTime) && localDateTime.toLocalTime().isBefore(endTime);
     }
 }

@@ -72,7 +72,6 @@ public class ReceiptsData {
         public BigDecimal getPrice() {
             return price;
         }
-    
 
         public void setShortDescription(String shortDescription) {
             this.shortDescription = shortDescription;

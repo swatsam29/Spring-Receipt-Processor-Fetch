@@ -11,6 +11,10 @@ public class PointsBreakdown {
         this.breakdownDetails = breakdownDetails;
     }
 
+    public PointsBreakdown(String string) {
+        // TODO Auto-generated constructor stub
+    }
+
     public int getTotalPoints() {
         return totalPoints;
     }
@@ -29,6 +33,10 @@ public class PointsBreakdown {
             for (String detail : breakdownDetails) {
                 display.append(" ").append(detail).append("\n");
             }
+
+            
+            display.append(" + ---------\n");
+            display.append(" = ").append(totalPoints).append(" points\n");
         } else {
             display.append("No points earned. Breakdown details:\n");
             for (String detail : breakdownDetails) {
@@ -36,6 +44,6 @@ public class PointsBreakdown {
             }
         }
 
-        return display.toString();
+        return display.toString().replaceAll("\"", "");
     }
 }
